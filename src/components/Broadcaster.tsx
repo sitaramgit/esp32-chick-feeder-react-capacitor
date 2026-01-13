@@ -6,9 +6,9 @@ import {
   addDoc,
   onSnapshot
 } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import { db, rtdb } from "../utils/firebase";
 import { rtcConfig } from "../utils/webrtc";
-
+import { ref, set } from "firebase/database";
 export default function Broadcaster() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -17,13 +17,14 @@ const [roodId, setRoomId] = useState('')
     try {
       // ✅ MUST be inside user action (Android rule)
       const stream = await navigator.mediaDevices.getUserMedia({
-  video: {
-    facingMode: { exact: "environment" }   // ← This forces back camera
-    // Optional: Add resolution/quality constraints if needed
-    // width: { ideal: 1280 },
-    // height: { ideal: 720 },
-    // frameRate: { ideal: 30 }
-  },
+//   video: {
+//     facingMode: { exact: "environment" }   // ← This forces back camera
+//     // Optional: Add resolution/quality constraints if needed
+//     // width: { ideal: 1280 },
+//     // height: { ideal: 720 },
+//     // frameRate: { ideal: 30 }
+//   },
+video: true,
   audio: true
 });
 
@@ -44,9 +45,14 @@ const [roodId, setRoomId] = useState('')
       const callRef = doc(collection(db, "calls"));
       const offerCandidates = collection(callRef, "offerCandidates");
       const answerCandidates = collection(callRef, "answerCandidates");
-
+      const roomId = callRef.id
       alert(`CALL ID: ${callRef.id}`);
-setRoomId(callRef.id);
+        setRoomId(callRef.id);
+        await set(ref(rtdb, `rooms/current`), {
+            roomId,
+            createdAt: Date.now(),
+            status: "active"
+        });
       // 4️⃣ ICE candidates
       pc.onicecandidate = e => {
         if (e.candidate) {
