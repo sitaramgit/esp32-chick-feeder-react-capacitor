@@ -124,7 +124,7 @@ export default function Broadcaster() {
     const navigate = useNavigate();
 
     const goBack = () => {
-        navigate("/dashboard");
+        navigate("/");
     };
     return (
         <Box>
@@ -139,7 +139,7 @@ export default function Broadcaster() {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                minHeight="100vh"
+                pt={10}
                 bgcolor="#f5f5f5"
             >
 

@@ -2,7 +2,6 @@
   "name": "feeder",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor",
   "dependencies": {
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",
@@ -38,7 +37,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "build:mobile": "cross-env PUBLIC_URL=. npm run build",
+    "build:web": "cross-env PUBLIC_URL=https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor npm run build",
+    "predeploy": "npm run build:web",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
@@ -60,6 +61,7 @@
     ]
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "gh-pages": "^6.3.0"
   }
 }
