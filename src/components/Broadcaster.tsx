@@ -15,10 +15,12 @@ import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StopIcon from "@mui/icons-material/Stop";
 export default function Broadcaster() {
+      const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const pcRef = useRef<RTCPeerConnection | null>(null);
     const [roomId, setRoomId] = useState('')
     const [isStreaming, setIsStreaming] = useState(false);
+
     const startStreaming = async () => {
         try {
             // ✅ MUST be inside user action (Android rule)
@@ -121,10 +123,10 @@ export default function Broadcaster() {
 
         setIsStreaming(false);
     };
-    const navigate = useNavigate();
+  
 
     const goBack = () => {
-        navigate("/dashboard");
+        navigate("/");
     };
     return (
         <Box>
@@ -139,7 +141,7 @@ export default function Broadcaster() {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                minHeight="100vh"
+                pt={10}
                 bgcolor="#f5f5f5"
             >
 
