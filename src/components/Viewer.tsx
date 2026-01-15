@@ -119,29 +119,34 @@ export default function Viewer() {
   }, []);
 
   return (
+     <Box sx={{ height: "100dvh", bgcolor: "#000" }}>
     <Box
       sx={{
-        height: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        bgcolor: "#000",
-        overflow: "hidden",
+        height: "100%",
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr",          // mobile
+          md: "2.5fr 1fr",    // desktop / tablet
+        },
+        gridTemplateRows: {
+          xs: "1fr 1fr",      // mobile: video 50%, controls 50%
+          md: "1fr",          // desktop: side-by-side
+        },
       }}
     >
-      {/* Video takes full available space */}
-      <Box sx={{ flex: 1, position: "relative", bgcolor: "black" }}>
+      {/* 🎥 CAMERA VIEW */}
+      <Box sx={{ position: "relative", bgcolor: "black" }}>
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          muted
           style={{
             width: "100%",
             height: "100%",
-            objectFit: "contain", // ← change to "cover" if you prefer cropped fullscreen
+            objectFit: "contain",
           }}
         />
-
-        {/* Overlay when not watching */}
         {status !== "watching" && (
           <Paper
             sx={{
@@ -209,7 +214,6 @@ export default function Viewer() {
           </Paper>
         )}
 
-        {/* Live indicator */}
         {status === "watching" && (
           <Box
             sx={{
@@ -221,9 +225,7 @@ export default function Viewer() {
               px: 1.5,
               py: 0.5,
               borderRadius: 12,
-              fontSize: "0.85rem",
               fontWeight: "bold",
-              letterSpacing: 0.5,
             }}
           >
             LIVE
@@ -231,25 +233,60 @@ export default function Viewer() {
         )}
       </Box>
 
-      {/* Bottom bar - optional future controls */}
-      {status === "watching" && (
-        <Box
+      {/* 🎮 CONTROL PANEL */}
+      <Box
+        sx={{
+          bgcolor: "#111",
+          p: 2,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
+        <Paper
+          elevation={3}
           sx={{
-            p: 2,
-            pb: "env(safe-area-inset-bottom, 16px)",
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            display: "flex",
-            justifyContent: "center",
-            gap: 3,
-            bgcolor: "rgba(0,0,0,0.6)",
+            p: 3,
+            bgcolor: "#1c1c1c",
+            color: "white",
+            borderRadius: 3,
           }}
         >
-          {/* You can add mute, fullscreen, etc. later */}
-          <IconButton color="primary" size="large">
-            <PlayArrowIcon />
-          </IconButton>
-        </Box>
-      )}
+          <Typography variant="h6" align="center" mb={3}>
+            Robot Controls
+          </Typography>
+
+          <Stack spacing={2}>
+            <ControlButton label="⬆️ Forward" />
+            <ControlButton label="⬇️ Backward" />
+
+            <Stack direction="row" spacing={2}>
+              <ControlButton label="⬅️ Rotate Left" />
+              <ControlButton label="➡️ Rotate Right" />
+            </Stack>
+
+            <ControlButton label="🎥 Start Feed" />
+            <ControlButton label="💧 Start Water" />
+          </Stack>
+        </Paper>
+      </Box>
     </Box>
+  </Box>
   );
 }
+
+const ControlButton = ({ label, onClick }: { label: string; onClick?: () => void }) => (
+  <Button
+    variant="contained"
+    fullWidth
+    size="large"
+    onClick={onClick}
+    sx={{
+      py: 2,
+      fontWeight: "bold",
+      borderRadius: 2,
+    }}
+  >
+    {label}
+  </Button>
+);

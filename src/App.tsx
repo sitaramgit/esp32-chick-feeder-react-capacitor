@@ -26,11 +26,6 @@ function App() {
    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box
-        sx={{
-          // ───── Main safe area fixes ─────
-          pt: '24px',     // ← status bar / notch
-          pb: '24px',  // ← navigation bar / gesture area
-        }}
       >
       <Routes>                                 {/* ← no HashRouter here anymore */}
         <Route path="/" element={<Dashboard />} />
