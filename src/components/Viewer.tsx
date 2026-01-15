@@ -15,10 +15,12 @@ import { doc, getDoc, collection, addDoc, onSnapshot, updateDoc } from "firebase
 import { db, rtdb } from "../utils/firebase";
 import { rtcConfig } from "../utils/webrtc";
 import { ref, onValue } from "firebase/database";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 export default function Viewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
-
+  const navigate = useNavigate();
   const [callId, setCallId] = useState("");
   const [status, setStatus] = useState<"idle" | "connecting" | "watching" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -118,8 +120,13 @@ export default function Viewer() {
     };
   }, []);
 
+      const goBack = () => {
+        navigate("/");
+    };
+
   return (
      <Box sx={{ height: "100dvh", bgcolor: "#000" }}>
+    
     <Box
       sx={{
         height: "100%",
@@ -134,6 +141,7 @@ export default function Viewer() {
         },
       }}
     >
+     
       {/* 🎥 CAMERA VIEW */}
       <Box sx={{ position: "relative", bgcolor: "black" }}>
         <video
@@ -252,6 +260,13 @@ export default function Viewer() {
             borderRadius: 3,
           }}
         >
+             <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={goBack}
+        sx={{ mt: 2, mb: 2 }}
+      >
+        Back to Dashboard
+      </Button>
           <Typography variant="h6" align="center" mb={3}>
             Robot Controls
           </Typography>
