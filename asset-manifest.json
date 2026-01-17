@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/css/main.f855e6bc.css",
-    "main.js": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/main.e2e836d9.js",
+    "main.js": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/main.51c9bcdd.js",
     "static/js/453.c4b6d303.chunk.js": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/453.c4b6d303.chunk.js",
     "index.html": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/index.html",
     "main.f855e6bc.css.map": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/css/main.f855e6bc.css.map",
-    "main.e2e836d9.js.map": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/main.e2e836d9.js.map",
+    "main.51c9bcdd.js.map": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/main.51c9bcdd.js.map",
     "453.c4b6d303.chunk.js.map": "https://sitaramgit.github.io/esp32-chick-feeder-react-capacitor/static/js/453.c4b6d303.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f855e6bc.css",
-    "static/js/main.e2e836d9.js"
+    "static/js/main.51c9bcdd.js"
   ]
 }
