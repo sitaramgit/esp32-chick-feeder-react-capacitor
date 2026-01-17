@@ -1,108 +1,125 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Grid, Card, CardContent, Typography, Button } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  Card,
+  CardContent,
+  Button,
+  IconButton,
+  Grid,
+} from "@mui/material";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
+import ClimateChart from "./ClimateChart";
+import CameraIndoorIcon from '@mui/icons-material/CameraIndoor';
+ import EngineeringIcon from '@mui/icons-material/Engineering';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const sendCommand = (type: 'food' | 'water') => {
-    // Your Firebase write logic here, e.g., setDoc for commands
+  const sendCommand = (type: "food" | "water") => {
     alert(`Sending ${type} command to ESP32`);
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h4" gutterBottom>Chick Feeder Dashboard</Typography>
-      <Grid container spacing={3}>
-        <Grid  >
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Live Surveillance Stream</Typography>
-              <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
-              <div style={styles.container}>
-      <h2>Dashboard</h2>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f4f6f8" }}>
+      {/* ---------------- TOP NAVBAR ---------------- */}
+   
 
-      <div style={styles.card}>
-        <h3>React Course</h3>
-        <p>Learn React step by step</p>
+      {/* ---------------- MAIN CONTENT ---------------- */}
+      <Box>
+        <Grid container spacing={3}>
+            {/* ----------- CONTROLS ----------- */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Controls
+                </Typography>
+                 <Button sx={{ mb: 2 }} startIcon={<EngineeringIcon/>} color="primary" variant="contained" fullWidth onClick={() => navigate("/viewer")}>
+                  Operate Dispenser
+                </Button>
+                <Button sx={{ mb: 2 }} startIcon={<VideoCameraBackIcon/>} variant="contained" color="secondary" fullWidth onClick={() => navigate("/broadcaster")}>
+                  Broadcaster
+                </Button>
+               
+                <Button
+                  fullWidth
+                  size="large"
+                  variant="contained"
+                  startIcon={<RestaurantIcon />}
+                  sx={{ mb: 2 }}
+                  onClick={() => sendCommand("food")}
+                >
+                  Dispense Food
+                </Button>
 
-        <div style={styles.actions}>
-          <button onClick={() => navigate("/start")} style={styles.startBtn}>
-            Start
-          </button>
-          <button onClick={() => navigate("/watch")} style={styles.watchBtn}>
-            Watch
-          </button>
-        </div>
-         <div style={styles.actions}>
-          <button onClick={() => navigate("/broadcaster")} style={styles.startBtn}>
-            Broadcaster
-          </button>
-          <button onClick={() => navigate("/viewer")} style={styles.watchBtn}>
-            viewer
-          </button>
-        </div>
-      </div>
-    </div>
-            </CardContent>
-          </Card>
+                <Button
+                  fullWidth
+                  size="large"
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<WaterDropIcon />}
+                  onClick={() => sendCommand("water")}
+                >
+                  Dispense Water
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* ----------- LIVE STREAM ----------- */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card sx={{ height: "100%" }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Live Surveillance
+                </Typography>
+
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: 360,
+                    bgcolor: "#000",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+        
+
+          {/* ----------- CLIMATE CHART ----------- */}
+          <Grid size={{ xs: 12 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Climate Analysis
+                </Typography>
+
+                <ClimateChart />
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-        <Grid >
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Controls</Typography>
-              <Button variant="contained" color="primary" onClick={() => sendCommand('food')} fullWidth sx={{ mb: 2 }}>
-                Dispense Food
-              </Button>
-              <Button variant="contained" color="secondary" onClick={() => sendCommand('water')} fullWidth>
-                Dispense Water
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        {/* Add more grids for charts, logs, etc. */}
-      </Grid>
+      </Box>
     </Box>
-    
   );
-};
-
-
-
-/* ---------- Styles ---------- */
-const styles = {
-  container: {
-    padding: 20,
-  },
-  card: {
-    padding: 16,
-    borderRadius: 10,
-    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-    maxWidth: 300,
-  },
-  actions: {
-    display: "flex",
-    gap: 10,
-    marginTop: 12,
-  },
-  startBtn: {
-    background: "#22c55e",
-    color: "#fff",
-    border: "none",
-    padding: "8px 14px",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  watchBtn: {
-    background: "#3b82f6",
-    color: "#fff",
-    border: "none",
-    padding: "8px 14px",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  page: {
-    padding: 20,
-  },
 };

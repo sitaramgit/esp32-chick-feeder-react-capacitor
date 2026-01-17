@@ -1,27 +1,130 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    collection,
-    doc,
-    setDoc,
-    addDoc,
-    onSnapshot
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  onSnapshot
 } from "firebase/firestore";
-import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Typography, Alert } from "@mui/material";
 import VideocamIcon from "@mui/icons-material/Videocam";
+import BluetoothConnectedIcon from "@mui/icons-material/BluetoothConnected";
+import BluetoothDisabledIcon from "@mui/icons-material/BluetoothDisabled";
 import { db, rtdb } from "../utils/firebase";
 import { rtcConfig } from "../utils/webrtc";
-import { ref, set } from "firebase/database";
+import { onValue, ref, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StopIcon from "@mui/icons-material/Stop";
-export default function Broadcaster() {
-      const navigate = useNavigate();
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const pcRef = useRef<RTCPeerConnection | null>(null);
-    const [roomId, setRoomId] = useState('')
-    const [isStreaming, setIsStreaming] = useState(false);
 
-    const startStreaming = async () => {
+export default function Broadcaster() {
+  const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const [roomId, setRoomId] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  
+  // Bluetooth states
+  const [device, setDevice] = useState<BluetoothDevice | null>(null);
+  const [server, setServer] = useState<BluetoothRemoteGATTServer | null>(null);
+  const [characteristic, setCharacteristic] = useState<BluetoothRemoteGATTCharacteristic | null>(null);
+  const [btStatus, setBtStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [btError, setBtError] = useState<string>("");
+
+  const hasBluetooth = () => {
+  return 'bluetooth' in navigator && navigator.bluetooth !== undefined;
+};
+
+
+
+  // ── Bluetooth Connection ───────────────────────────────────────────────
+  const connectBluetooth = async () => {
+    if (!hasBluetooth()) {
+  alert("Your browser does not support Web Bluetooth or Bluetooth is turned off.");
+  return;
+}
+    try {
+      setBtStatus("connecting");
+      setBtError("");
+
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ name: "ChickDispenser" }], // Must match ESP32 device name
+        optionalServices: ["0000ffe0-0000-1000-8000-00805f9b34fb"] // Nordic UART service UUID
+      });
+
+      device.addEventListener("gattserverdisconnected", onDisconnected);
+      setDevice(device);
+
+      const server = await device.gatt?.connect();
+      if (!server) throw new Error("Failed to connect GATT server");
+      setServer(server);
+
+      const service = await server.getPrimaryService("0000ffe0-0000-1000-8000-00805f9b34fb");
+      const characteristic = await service.getCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fb");
+      setCharacteristic(characteristic);
+
+      setBtStatus("connected");
+    } catch (err: any) {
+      console.error(err);
+      setBtError(err.message || "Bluetooth connection failed");
+      setBtStatus("disconnected");
+    }
+  };
+
+  const onDisconnected = () => {
+    setBtStatus("disconnected");
+    setCharacteristic(null);
+    setServer(null);
+    setDevice(null);
+  };
+
+  // Send command to ESP32
+  const sendCommand = async (command: string) => {
+    if (!characteristic) {
+      setBtError("Not connected to dispenser");
+      return;
+    }
+
+    try {
+      const encoder = new TextEncoder();
+      await characteristic.writeValue(encoder.encode(command + "\n"));
+      console.log(`Sent: ${command}`);
+    } catch (err) {
+      console.error("Send failed:", err);
+      setBtError("Failed to send command");
+    }
+  };
+
+  // ── Listen to Firebase commands ────────────────────────────────────────
+  useEffect(() => {
+    if (!roomId) return;
+
+    const commandsRef = ref(rtdb, `rooms/${roomId}/commands`);
+
+    const unsubscribe = onValue(commandsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data?.command && data?.timestamp) {
+        sendCommand(data.command);
+        // Optional: clear command after sending
+        // set(commandsRef, null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [roomId]);
+
+  // ... (your existing startStreaming, stopStreaming, etc. code remains)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (server?.connected) {
+        server.disconnect();
+      }
+    };
+  }, [server]);
+
+   const startStreaming = async () => {
         try {
             // ✅ MUST be inside user action (Android rule)
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -124,104 +227,87 @@ export default function Broadcaster() {
         setIsStreaming(false);
     };
   
+    
+  return (
+    <Box>
+      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/")} sx={{ mb: 1 }}>
+        Back to Dashboard
+      </Button>
 
-    const goBack = () => {
-        navigate("/");
-    };
-    return (
-        <Box>
+      <Card sx={{ width: { xs: "95%", sm: 500 }, m: "auto", mt: 4 }}>
+        <CardContent>
+          <Typography variant="h6" align="center" gutterBottom>
+            Live Streaming + Dispenser Control
+          </Typography>
+
+          {/* Bluetooth Connection Button */}
+          <Button
+            variant="outlined"
+            color={btStatus === "connected" ? "success" : "primary"}
+            fullWidth
+            startIcon={
+              btStatus === "connected" ? <BluetoothConnectedIcon /> : <BluetoothDisabledIcon />
+            }
+            onClick={connectBluetooth}
+            disabled={btStatus === "connecting"}
+            sx={{ mb: 2 }}
+          >
+            {btStatus === "connecting"
+              ? "Connecting..."
+              : btStatus === "connected"
+              ? "Bluetooth Connected"
+              : "Connect to Dispenser"}
+          </Button>
+
+          {btError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {btError}
+            </Alert>
+          )}
+
+          {/* Your existing Start/Stop Streaming buttons */}
+          {!isStreaming ? (
             <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={goBack}
-                sx={{ mb: 1 }}
+              variant="contained"
+              color="primary"
+              fullWidth
+              startIcon={<VideocamIcon />}
+              onClick={startStreaming}
+              sx={{ mb: 2 }}
             >
-                Back to Dashboard
+              Start Streaming
             </Button>
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                pt={10}
-                bgcolor="#f5f5f5"
+          ) : (
+            <Button
+              variant="contained"
+              color="error"
+              fullWidth
+              startIcon={<StopIcon />}
+              onClick={stopStreaming}
+              sx={{ mb: 2 }}
             >
+              Stop Streaming
+            </Button>
+          )}
 
+          {roomId && (
+            <Typography variant="body2" align="center" sx={{ mb: 2 }}>
+              CALL ID: <strong>{roomId}</strong>
+            </Typography>
+          )}
 
-                <Card
-                    sx={{
-                        width: { xs: "95%", sm: 500 },
-                        boxShadow: 6,
-                        borderRadius: 3
-                    }}
-                >
-                    <CardContent>
-                        <Typography variant="h6" align="center" gutterBottom>
-                            Live Streaming
-                        </Typography>
-
-                        {/* Start / Stop Streaming */}
-                        {!isStreaming ? (
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                startIcon={<VideocamIcon />}
-                                onClick={startStreaming}
-                                sx={{ mb: 2 }}
-                            >
-                                Start Streaming
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="contained"
-                                color="error"
-                                fullWidth
-                                startIcon={<StopIcon />}
-                                onClick={stopStreaming}
-                                sx={{ mb: 2 }}
-                            >
-                                Stop Streaming
-                            </Button>
-                        )}
-
-                        {roomId && (
-                            <Typography
-                                variant="body2"
-                                align="center"
-                                color="text.secondary"
-                                sx={{ mb: 2 }}
-                            >
-                                CALL ID: <strong>{roomId}</strong>
-                            </Typography>
-                        )}
-
-                        <Box
-                            sx={{
-                                position: "relative",
-                                width: "100%",
-                                paddingTop: "56.25%", // 16:9
-                                backgroundColor: "black",
-                                borderRadius: 2,
-                                overflow: "hidden"
-                            }}
-                        >
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                muted
-                                playsInline
-                                style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover"
-                                }}
-                            />
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Box>
-        </Box>
-    );
+          {/* Video preview */}
+          <Box sx={{ position: "relative", paddingTop: "56.25%", bgcolor: "black", borderRadius: 2 }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
 }

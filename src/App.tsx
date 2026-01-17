@@ -10,10 +10,12 @@ import Broadcaster from './components/Broadcaster';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
+import Layout from './Layout';
+import ClimateChart from './components/ClimateChart';
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#4CAF50' },  // Green for farm theme
+    primary: { main: 'rgb(58 168 142)' },  // Green for farm theme
     secondary: { main: '#FF9800' },  // Orange for alerts (e.g., low water)
   },
   typography: {
@@ -25,16 +27,19 @@ function App() {
   return (
    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box
-      >
+
       <Routes>                                 {/* ← no HashRouter here anymore */}
+        <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/start" element={<StartStream />} />
         <Route path="/watch" element={<WatchStream />} />
-        <Route path="/viewer" element={<Viewer />} />
+        <Route path="/operate-dispense" element={<Viewer />} />
         <Route path="/broadcaster" element={<Broadcaster />} />
+        <Route path="/climate-chart" element={<ClimateChart />} />
+        
+        </Route>
       </Routes>
-      </Box>
+
     </ThemeProvider>
   );
 }
