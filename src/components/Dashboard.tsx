@@ -43,7 +43,7 @@ export const Dashboard = () => {
                 <Typography variant="h6" gutterBottom>
                   Controls
                 </Typography>
-                 <Button sx={{ mb: 2 }} startIcon={<EngineeringIcon/>} color="primary" variant="contained" fullWidth onClick={() => navigate("/viewer")}>
+                 <Button sx={{ mb: 2 }} startIcon={<EngineeringIcon/>} color="primary" variant="contained" fullWidth onClick={() => navigate("/operate-dispense")}>
                   Operate Dispenser
                 </Button>
                 <Button sx={{ mb: 2 }} startIcon={<VideoCameraBackIcon/>} variant="contained" color="secondary" fullWidth onClick={() => navigate("/broadcaster")}>
