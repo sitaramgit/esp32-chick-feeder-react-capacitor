@@ -144,7 +144,7 @@ const isAndroid = Capacitor.getPlatform() === 'android';
            ...(isAndroid && { paddingBottom: '25px' }),
          }}
        >
-      <BottomNavigationAction onClick={() => {navigateToPage('/')}}  label="Settings" icon={<HomeIcon />} />
+      <BottomNavigationAction onClick={() => {navigateToPage('/')}}  label="Home" icon={<HomeIcon />} />
          <BottomNavigationAction onClick={() => navigateToPage('/climate-chart')} label="Climate Chart" icon={<InsightsIcon />} />
          <BottomNavigationAction onClick={() => navigateToPage('/operate-dispense')} label="Operate Dispense" icon={<EngineeringIcon />} />
          
