@@ -25,15 +25,38 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### WebRTC ICE Servers Configuration (STUN + TURN)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This project uses **WebRTC** for real-time peer-to-peer video streaming.  
+To handle connections across **NATs**, firewalls, and symmetric networks (very common on mobile/4G/5G/office Wi-Fi), we configure **STUN** and **TURN** servers.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### rtcConfig (in `utils/webrtc.ts` or similar)
 
-### `npm run eject`
+**What is STUN and TURN? (Quick Explanation)**
+
+STUN (Session Traversal Utilities for NAT)
+
+→ Helps each peer discover its public IP and port.
+
+→ Very lightweight — no media goes through the server.
+
+→ Works for ~80% of connections.
+TURN (Traversal Using Relays around NAT)
+
+→ Acts as a relay server when direct P2P is impossible (symmetric NAT, strict firewall, UDP blocked, etc.).
+
+→ All audio/video/data is relayed through the TURN server 
+→ ensures connection but uses more bandwidth and adds ~30–100 ms latency.
+
+→ ~15–30% of real-world WebRTC connections need TURN (higher in mobile/enterprise networks).
+
+### Why we use Turnix.io
+
+* Globally distributed infrastructure (low latency relays)
+* Supports both UDP and TCP (and TLS via turns:)
+* Reliable for production WebRTC apps (video calls, live streaming, IoT remote viewing)
+* Credentials are long-term (but rotate them periodically for security in production)
+
 
 **Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
