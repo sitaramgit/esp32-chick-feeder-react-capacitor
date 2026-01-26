@@ -14,9 +14,10 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { doc, getDoc, collection, addDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db, rtdb } from "../utils/firebase";
 import { rtcConfig } from "../utils/webrtc";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { FIREBASE_COMMANDS } from "../utils/constants";
 export default function Viewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -168,6 +169,7 @@ export default function Viewer() {
     setStatus("error");
   }
 
+
   // Cleanup on unmount / error
   return () => {
     if (pc) {
@@ -176,6 +178,29 @@ export default function Viewer() {
       pcRef.current = null;
     }
   };
+};
+
+// Add near the top
+const sendControlCommand = async (command: string) => {
+  if (!callId.trim()) {
+    setErrorMsg("No room ID – cannot send command");
+    return;
+  }
+
+  try {
+    const commandsRef = ref(rtdb, `rooms/${callId}/commands`);
+    await set(commandsRef, {
+      command,
+      timestamp: Date.now(),
+      sender: "viewer", // optional
+    });
+    console.log(`Sent command: ${command}`);
+    setStatus(`Command sent: ${command}` as any); // temporary feedback
+    setTimeout(() => setStatus("watching"), 1500);
+  } catch (err: any) {
+    console.error("Failed to send command:", err);
+    setErrorMsg("Failed to send command");
+  }
 };
 
   // Cleanup
@@ -345,18 +370,55 @@ export default function Viewer() {
               Robot Controls
             </Typography>
 
-            <Stack spacing={2}>
-              <ControlButton label="⬆️ Forward" />
-              <ControlButton label="⬇️ Backward" />
+           <Stack spacing={2}>
+  <Button
+    variant="contained"
+    onClick={() => sendControlCommand(FIREBASE_COMMANDS.FWD)}
+  >
+    ⬆️ Forward
+  </Button>
 
-              <Stack direction="row" spacing={2}>
-                <ControlButton label="⬅️ Rotate Left" />
-                <ControlButton label="➡️ Rotate Right" />
-              </Stack>
+  <Button
+    variant="contained"
+    onClick={() => sendControlCommand(FIREBASE_COMMANDS.BWD)}
+  >
+    ⬇️ Backward
+  </Button>
 
-              <ControlButton label="🎥 Start Feed" />
-              <ControlButton label="💧 Start Water" />
-            </Stack>
+  <Stack direction="row" spacing={2}>
+    <Button
+      variant="contained"
+      onClick={() => sendControlCommand(FIREBASE_COMMANDS.LFT)}
+      fullWidth
+    >
+      ⬅️ Rotate Left
+    </Button>
+
+    <Button
+      variant="contained"
+      onClick={() => sendControlCommand(FIREBASE_COMMANDS.RGT)}
+      fullWidth
+    >
+      ➡️ Rotate Right
+    </Button>
+  </Stack>
+
+  <Button
+    variant="contained"
+    color="success"
+    onClick={() => sendControlCommand(FIREBASE_COMMANDS.FEED_ON)}
+  >
+    🎥 Start Feed
+  </Button>
+
+  <Button
+    variant="contained"
+    color="info"
+    onClick={() => sendControlCommand(FIREBASE_COMMANDS.WATER_ON)}
+  >
+    💧 Start Water
+  </Button>
+</Stack>
           </Paper>
         </Box>
       </Box>
@@ -364,12 +426,16 @@ export default function Viewer() {
   );
 }
 
-const ControlButton = ({ label, onClick }: { label: string; onClick?: () => void }) => (
+const ControlButton = ({ label, command, onClick }: { 
+  label: string; 
+  command?: string; 
+  onClick?: any
+}) => (
   <Button
     variant="contained"
     fullWidth
     size="large"
-    onClick={onClick}
+    onClick={onClick(command)}
     sx={{
       py: 2,
       fontWeight: "bold",

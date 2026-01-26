@@ -16,12 +16,14 @@ import { onValue, ref, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StopIcon from "@mui/icons-material/Stop";
+import BluetoothSetup from "./BluetoothSetup";
 
 export default function Broadcaster() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const [roomId, setRoomId] = useState("");
+  const [firebaseCommand, setFirebaseCommand] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   
   // Bluetooth states
@@ -79,39 +81,45 @@ export default function Broadcaster() {
   };
 
   // Send command to ESP32
-  const sendCommand = async (command: string) => {
-    if (!characteristic) {
-      setBtError("Not connected to dispenser");
-      return;
-    }
+const sendCommand = async (command: string) => {
+  if (btStatus !== "connected" || !characteristic) {
+    setBtError("Bluetooth not connected – cannot send command");
+    return;
+  }
 
-    try {
-      const encoder = new TextEncoder();
-      await characteristic.writeValue(encoder.encode(command + "\n"));
-      console.log(`Sent: ${command}`);
-    } catch (err) {
-      console.error("Send failed:", err);
-      setBtError("Failed to send command");
-    }
-  };
+  try {
+    const encoder = new TextEncoder();
+    await characteristic.writeValue(encoder.encode(command + "\n"));
+    console.log(`Sent to ESP32: ${command}`);
+  } catch (err: any) {
+    console.error("BLE write failed:", err);
+    setBtError("Failed to send: " + (err.message || "unknown error"));
+  }
+};
 
   // ── Listen to Firebase commands ────────────────────────────────────────
-  useEffect(() => {
-    if (!roomId) return;
+  // Replace your existing useEffect for commands
+useEffect(() => {
+  if (!roomId) return;
 
-    const commandsRef = ref(rtdb, `rooms/${roomId}/commands`);
+  const commandsRef = ref(rtdb, `rooms/${roomId}/commands`);
 
-    const unsubscribe = onValue(commandsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data?.command && data?.timestamp) {
-        sendCommand(data.command);
-        // Optional: clear command after sending
-        // set(commandsRef, null);
-      }
-    });
+  const unsubscribe = onValue(commandsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data?.command) return;
 
-    return () => unsubscribe();
-  }, [roomId]);
+    console.log("Received command from viewer:", data.command);
+
+    // Send to ESP32
+    setFirebaseCommand(data.command)
+    // sendCommand(data.command);
+
+    // Optional: clear the command after processing (prevents resending on reconnect)
+    set(commandsRef, null).catch(err => console.warn("Clear command failed", err));
+  });
+
+  return () => unsubscribe();
+}, [roomId, characteristic]); // ← important: re-run if characteristic changes
 
   // ... (your existing startStreaming, stopStreaming, etc. code remains)
 
@@ -308,6 +316,7 @@ export default function Broadcaster() {
           </Box>
         </CardContent>
       </Card>
+      <BluetoothSetup firebaseCMD={firebaseCommand} />
     </Box>
   );
 }

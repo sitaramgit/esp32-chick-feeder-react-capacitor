@@ -27,6 +27,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import SensorDashboard from "./SensorDashboard";
 import { rtdb } from "../utils/firebase";
 import { onValue, ref, set } from "firebase/database";
+import BluetoothSetup from "./BluetoothSetup";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -191,6 +192,19 @@ export const Dashboard = () => {
               </CardContent>
             </Card>
           </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Bluetooth Setup
+                </Typography>
+
+                <BluetoothSetup />
+              </CardContent>
+            </Card>
+          </Grid>
+          
         </Grid>
       </Box>
     </Box>
