@@ -35,6 +35,7 @@ export const Dashboard = () => {
   const [status, setStatus] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
+
   const hallLightRef = ref(rtdb, "/controls/hallLight");
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export const Dashboard = () => {
       <Box>
         <Grid container spacing={3}>
           {/* ----------- CONTROLS ----------- */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 6, }}>
             <Card sx={{ height: "100%" }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
