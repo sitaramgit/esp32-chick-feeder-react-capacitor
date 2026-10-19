@@ -18,11 +18,11 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import AddchartIcon from '@mui/icons-material/Addchart';
-import SettingsIcon from '@mui/icons-material/Settings';
 import HomeIcon from '@mui/icons-material/Home';
 import InsightsIcon from '@mui/icons-material/Insights';
 import EngineeringIcon from '@mui/icons-material/Engineering';
+import SettingsIcon from '@mui/icons-material/Settings';
+import PetsIcon from '@mui/icons-material/Pets';
 import { Capacitor } from '@capacitor/core';
 
 const drawerWidth = 260;
@@ -40,10 +40,10 @@ const Layout = () => {
   };
 
   const menuItems = [
-    { label: 'Dashboard', path: '/', icon: <HomeIcon /> },
+    { label: 'Home', path: '/', icon: <HomeIcon /> },
+    { label: 'Chicken Farm', path: '/chicken-farm', icon: <PetsIcon /> },
     { label: 'Climate Chart', path: '/climate-chart', icon: <InsightsIcon /> },
-    { label: 'Farm Controls', path: '/operate-dispense', icon: <EngineeringIcon /> },
-    { label: 'Settings', path: '/', icon: <SettingsIcon /> },
+    { label: 'Controls', path: '/operate-dispense', icon: <EngineeringIcon /> },
   ];
 
   const Sidebar = (
@@ -64,7 +64,7 @@ const Layout = () => {
       <Toolbar />
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.6, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
         <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)' }}>
-          <ReceiptIcon sx={{ color: '#d4f7dc' }} />
+          <PetsIcon sx={{ color: '#d4f7dc' }} />
         </Box>
         <Box>
           <Typography variant="subtitle2" sx={{ color: '#b8e7c4', letterSpacing: 1.4, textTransform: 'uppercase' }}>
@@ -103,7 +103,7 @@ const Layout = () => {
           Live monitoring
         </Typography>
         <Typography variant="body2" sx={{ mt: 1, color: '#edf9f0' }}>
-          Pump, bulb, servo, soil and climate sensors
+          Home automation + chicken farm sensors
         </Typography>
       </Box>
     </Drawer>
@@ -137,7 +137,7 @@ const Layout = () => {
           <Toolbar>
             <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
               <Box onClick={() => navigateToPage('/')} display="flex" color={'#1f9d5a'} alignItems="center" gap={1.2} sx={{ cursor: 'pointer' }}>
-                <ReceiptIcon />
+                <PetsIcon />
                 <Typography variant="h6" fontWeight="bold">
                   Chick Farm Automation
                 </Typography>
@@ -181,8 +181,8 @@ const Layout = () => {
             }}
           >
             <BottomNavigationAction onClick={() => navigateToPage('/')} label="Home" icon={<HomeIcon />} />
+            <BottomNavigationAction onClick={() => navigateToPage('/chicken-farm')} label="Farm" icon={<PetsIcon />} />
             <BottomNavigationAction onClick={() => navigateToPage('/climate-chart')} label="Chart" icon={<InsightsIcon />} />
-            <BottomNavigationAction onClick={() => navigateToPage('/operate-dispense')} label="Controls" icon={<EngineeringIcon />} />
           </BottomNavigation>
         )}
       </Box>
