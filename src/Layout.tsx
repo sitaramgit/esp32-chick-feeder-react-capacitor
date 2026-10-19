@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -14,6 +14,7 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
+  Button,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -21,9 +22,10 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import InsightsIcon from '@mui/icons-material/Insights';
 import EngineeringIcon from '@mui/icons-material/Engineering';
-import SettingsIcon from '@mui/icons-material/Settings';
 import PetsIcon from '@mui/icons-material/Pets';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { Capacitor } from '@capacitor/core';
+import { logoutUser } from './utils/firebase';
 
 const drawerWidth = 260;
 
@@ -39,12 +41,23 @@ const Layout = () => {
     navigate(path);
   };
 
-  const menuItems = [
-    { label: 'Home', path: '/', icon: <HomeIcon /> },
-    { label: 'Chicken Farm', path: '/chicken-farm', icon: <PetsIcon /> },
-    { label: 'Climate Chart', path: '/climate-chart', icon: <InsightsIcon /> },
-    { label: 'Controls', path: '/operate-dispense', icon: <EngineeringIcon /> },
-  ];
+  const menuItems = useMemo(
+    () => [
+      { label: 'Home', path: '/', icon: <HomeIcon /> },
+      { label: 'Chicken Farm', path: '/chicken-farm', icon: <PetsIcon /> },
+      { label: 'Climate Chart', path: '/climate-chart', icon: <InsightsIcon /> },
+      { label: 'Controls', path: '/operate-dispense', icon: <EngineeringIcon /> },
+    ],
+    []
+  );
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
 
   const Sidebar = (
     <Drawer
@@ -145,9 +158,16 @@ const Layout = () => {
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <NotificationsIcon sx={{ color: '#1f9d5a' }} />
-                <Typography variant="body2" sx={{ color: '#2e3a2d', fontWeight: 600 }}>
-                  Farm online
-                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  color="error"
+                  startIcon={<LogoutIcon />}
+                  onClick={handleLogout}
+                  sx={{ borderRadius: 999, textTransform: 'none' }}
+                >
+                  Logout
+                </Button>
               </Box>
             </Box>
           </Toolbar>

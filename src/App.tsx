@@ -11,6 +11,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './Layout';
 import ClimateChart from './components/ClimateChart';
+import AuthGate from './components/AuthGate';
 
 const theme = createTheme({
   palette: {
@@ -27,17 +28,19 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/chicken-farm" element={<ChickenFarmDashboard />} />
-          <Route path="/start" element={<StartStream />} />
-          <Route path="/watch" element={<WatchStream />} />
-          <Route path="/operate-dispense" element={<Viewer />} />
-          <Route path="/broadcaster" element={<Broadcaster />} />
-          <Route path="/climate-chart" element={<ClimateChart />} />
-        </Route>
-      </Routes>
+      <AuthGate>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/chicken-farm" element={<ChickenFarmDashboard />} />
+            <Route path="/start" element={<StartStream />} />
+            <Route path="/watch" element={<WatchStream />} />
+            <Route path="/operate-dispense" element={<Viewer />} />
+            <Route path="/broadcaster" element={<Broadcaster />} />
+            <Route path="/climate-chart" element={<ClimateChart />} />
+          </Route>
+        </Routes>
+      </AuthGate>
     </ThemeProvider>
   );
 }
