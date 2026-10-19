@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDe8Jbt1lxmVLPHr65ZucM--qIFE4D_v_s",
@@ -15,5 +16,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
-
 export const rtdb = getDatabase(app);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
+
+export const loginWithGoogle = async () => {
+  return signInWithPopup(auth, googleProvider);
+};
+
+export const logoutUser = async () => {
+  return signOut(auth);
+};
