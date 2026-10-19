@@ -5,6 +5,11 @@ import {
   Card,
   CardContent,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Grid,
   IconButton,
@@ -46,6 +51,13 @@ type SensorState = {
   last_update?: string;
 };
 
+type ConfirmState = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+};
+
 const defaultControlsState: ControlsState = {
   gate: "stop",
   feeder_servo: "close",
@@ -66,6 +78,7 @@ const ChickenFarmDashboard = () => {
   const [status, setStatus] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>("Waiting...");
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   const farmControls = [
     { label: "Pump", path: "/controls/pump", value: controls.pump, icon: <WaterDropIcon /> },
@@ -124,6 +137,10 @@ const ChickenFarmDashboard = () => {
     };
   }, []);
 
+  const openConfirm = (config: Omit<ConfirmState, "onConfirm"> & { onConfirm: () => void }) => {
+    setConfirmDialog({ ...config, onConfirm: config.onConfirm });
+  };
+
   const updateControl = async (path: string, value: string) => {
     try {
       await set(ref(rtdb, path), value);
@@ -173,209 +190,321 @@ const ChickenFarmDashboard = () => {
     await updateControl(path, nextValue);
   };
 
+  const confirmAction = (title: string, message: string, confirmLabel: string, action: () => void) => {
+    setConfirmDialog({ title, message, confirmLabel, onConfirm: action });
+  };
+
+  const servoOpen = (controls.feeder_servo || "close").toLowerCase() === "open";
+  const servoClosed = (controls.feeder_servo || "close").toLowerCase() === "close";
+  const motorOn = (controls.feeder_motor || "off").toLowerCase() === "on";
+  const motorOff = (controls.feeder_motor || "off").toLowerCase() === "off";
+  const gateOpen = (controls.gate || "stop").toLowerCase() === "open";
+  const gateClosed = (controls.gate || "stop").toLowerCase() === "close";
+  const gateStopped = (controls.gate || "stop").toLowerCase() === "stop";
+
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f4f7f1", minHeight: "100vh" }}>
-      <Box sx={{ maxWidth: 1400, mx: "auto" }}>
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} sx={{ mb: 3 }}>
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <PetsIcon sx={{ fontSize: 32, color: "primary.main" }} />
-            <Box>
-              <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: 1.5 }}>
-                Chicken farm automation
-              </Typography>
-              <Typography variant="h4" fontWeight={800} sx={{ color: "#1b2a1a" }}>
-                Chick Farm Automation
-              </Typography>
+    <>
+      <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f4f7f1", minHeight: "100vh" }}>
+        <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} sx={{ mb: 3 }}>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <PetsIcon sx={{ fontSize: 32, color: "primary.main" }} />
+              <Box>
+                <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 700, letterSpacing: 1.5 }}>
+                  Chicken farm automation
+                </Typography>
+                <Typography variant="h4" fontWeight={800} sx={{ color: "#1b2a1a" }}>
+                  Chick Farm Automation
+                </Typography>
+              </Box>
             </Box>
-          </Box>
 
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Chip icon={<SignalIcon />} label={lastUpdated} color="success" variant="outlined" />
-            <IconButton color="primary" aria-label="refresh data" onClick={() => setLoading(false)}>
-              <RefreshIcon />
-            </IconButton>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Chip icon={<SignalIcon />} label={lastUpdated} color="success" variant="outlined" />
+              <IconButton color="primary" aria-label="refresh data" onClick={() => setLoading(false)}>
+                <RefreshIcon />
+              </IconButton>
+            </Stack>
           </Stack>
-        </Stack>
 
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          {summaryCards.map((card) => (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
-              <Card sx={{ borderRadius: 3, height: "100%", border: "1px solid rgba(20,40,22,0.08)" }}>
-                <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography variant="caption" sx={{ textTransform: "uppercase", color: "text.secondary" }}>
-                      {card.label}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            {summaryCards.map((card) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
+                <Card sx={{ borderRadius: 3, height: "100%", border: "1px solid rgba(20,40,22,0.08)" }}>
+                  <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ textTransform: "uppercase", color: "text.secondary" }}>
+                        {card.label}
+                      </Typography>
+                      <Typography variant="h5" fontWeight={700} sx={{ color: card.accent }}>
+                        {card.value}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: card.accent.replace(".main", ".light") }}>
+                      {card.icon}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, lg: 7 }}>
+              <Card sx={{ borderRadius: 4, boxShadow: 3, height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                    Farm controls
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+
+                  <Grid container spacing={2}>
+                    {farmControls.map((item) => (
+                      <Grid size={{ xs: 12, sm: 6 }} key={item.label}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 3,
+                            border: "1px solid rgba(0,0,0,0.08)",
+                            bgcolor: isOn(item.value) ? "rgba(30, 144, 93, 0.09)" : "#f8faf8",
+                          }}
+                        >
+                          <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Box sx={{ color: isOn(item.value) ? "success.main" : "text.disabled" }}>{item.icon}</Box>
+                              <Typography fontWeight={600}>{item.label}</Typography>
+                            </Stack>
+                            <Switch
+                              checked={isOn(item.value)}
+                              onChange={() => {
+                                const nextValue = isOn(item.value) ? "off" : "on";
+                                confirmAction(
+                                  `Turn ${item.label} ${nextValue === "on" ? "on" : "off"}?`,
+                                  `This will change ${item.label} to ${nextValue}. Continue?`,
+                                  nextValue === "on" ? "Turn on" : "Turn off",
+                                  () => toggleSwitch(item.path, item.value)
+                                );
+                              }}
+                              color={isOn(item.value) ? "success" : "default"}
+                            />
+                          </Stack>
+                          <Typography variant="caption" sx={{ color: "text.secondary", mt: 1, display: "block" }}>
+                            Status: <strong>{matchValue(item.value)}</strong>
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                      Feeder and gate actions
                     </Typography>
-                    <Typography variant="h5" fontWeight={700} sx={{ color: card.accent }}>
-                      {card.value}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: card.accent.replace(".main", ".light") }}>
-                    {card.icon}
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap>
+                      <Button
+                        variant={servoOpen ? "contained" : "outlined"}
+                        color={servoOpen ? "success" : "primary"}
+                        disabled={servoOpen}
+                        sx={{
+                          minWidth: 180,
+                          opacity: servoOpen ? 1 : 0.96,
+                          ...(servoOpen && { boxShadow: "0 8px 18px rgba(46, 125, 50, 0.28)" }),
+                        }}
+                        onClick={() => confirmAction("Open feeder servo?", "This will open the chicken feeder servo. Continue?", "Open", () => updateControl("/controls/feeder_servo", "open"))}
+                      >
+                        {servoOpen ? "Feeder servo open" : "Open feeder servo"}
+                      </Button>
+
+                      <Button
+                        variant={servoClosed ? "contained" : "outlined"}
+                        color={servoClosed ? "warning" : "inherit"}
+                        disabled={servoClosed}
+                        sx={{
+                          minWidth: 180,
+                          opacity: servoClosed ? 1 : 0.96,
+                          ...(servoClosed && { boxShadow: "0 8px 18px rgba(237, 108, 2, 0.22)" }),
+                        }}
+                        onClick={() => confirmAction("Close feeder servo?", "This will close the chicken feeder servo. Continue?", "Close", () => updateControl("/controls/feeder_servo", "close"))}
+                      >
+                        {servoClosed ? "Feeder servo closed" : "Close feeder servo"}
+                      </Button>
+
+                      <Button
+                        variant={motorOn ? "contained" : "outlined"}
+                        color={motorOn ? "secondary" : "inherit"}
+                        disabled={motorOn}
+                        sx={{
+                          minWidth: 180,
+                          ...(motorOn && { boxShadow: "0 8px 18px rgba(156, 39, 176, 0.24)" }),
+                        }}
+                        onClick={() => confirmAction("Start feeder motor?", "This will start the feeder motor for automatic feeding. Continue?", "Start", () => updateControl("/controls/feeder_motor", "on"))}
+                      >
+                        {motorOn ? "Feeder motor on" : "Start feeder motor"}
+                      </Button>
+
+                      <Button
+                        variant={motorOff ? "contained" : "outlined"}
+                        color={motorOff ? "error" : "inherit"}
+                        disabled={motorOff}
+                        sx={{
+                          minWidth: 180,
+                          ...(motorOff && { boxShadow: "0 8px 18px rgba(211, 47, 47, 0.18)" }),
+                        }}
+                        onClick={() => confirmAction("Stop feeder motor?", "This will stop the feeder motor. Continue?", "Stop", () => updateControl("/controls/feeder_motor", "off"))}
+                      >
+                        {motorOff ? "Feeder motor off" : "Stop feeder motor"}
+                      </Button>
+                    </Stack>
+
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap sx={{ mt: 2 }}>
+                      <Button
+                        variant={gateOpen ? "contained" : "outlined"}
+                        sx={{
+                          minWidth: 150,
+                          bgcolor: gateOpen ? "#2e7d32" : undefined,
+                          color: gateOpen ? "#fff" : undefined,
+                          ...(gateOpen && { boxShadow: "0 8px 18px rgba(46, 125, 50, 0.25)" }),
+                        }}
+                        disabled={gateOpen}
+                        onClick={() => confirmAction("Open gate?", "This will open the poultry gate. Continue?", "Open gate", () => updateControl("/controls/gate", "open"))}
+                      >
+                        {gateOpen ? "Gate open" : "Open gate"}
+                      </Button>
+
+                      <Button
+                        variant={gateClosed ? "contained" : "outlined"}
+                        sx={{
+                          minWidth: 150,
+                          bgcolor: gateClosed ? "#ef6c00" : undefined,
+                          color: gateClosed ? "#fff" : undefined,
+                          ...(gateClosed && { boxShadow: "0 8px 18px rgba(239, 108, 0, 0.22)" }),
+                        }}
+                        disabled={gateClosed}
+                        onClick={() => confirmAction("Close gate?", "This will close the poultry gate. Continue?", "Close gate", () => updateControl("/controls/gate", "close"))}
+                      >
+                        {gateClosed ? "Gate closed" : "Close gate"}
+                      </Button>
+
+                      <Button
+                        variant={gateStopped ? "contained" : "outlined"}
+                        disabled={gateStopped}
+                        sx={{
+                          minWidth: 150,
+                          ...(gateStopped && { boxShadow: "0 8px 18px rgba(0, 0, 0, 0.18)" }),
+                        }}
+                        onClick={() => confirmAction("Stop gate?", "This will stop the gate movement immediately. Continue?", "Stop gate", () => updateControl("/controls/gate", "stop"))}
+                      >
+                        {gateStopped ? "Gate stopped" : "Stop gate"}
+                      </Button>
+                    </Stack>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-          ))}
-        </Grid>
 
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <Card sx={{ borderRadius: 4, boxShadow: 3, height: "100%" }}>
-              <CardContent>
-                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                  Farm controls
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-
-                <Grid container spacing={2}>
-                  {farmControls.map((item) => (
-                    <Grid size={{ xs: 12, sm: 6 }} key={item.label}>
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: 3,
-                          border: "1px solid rgba(0,0,0,0.08)",
-                          bgcolor: isOn(item.value) ? "rgba(30, 144, 93, 0.09)" : "#f8faf8",
-                        }}
-                      >
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Box sx={{ color: isOn(item.value) ? "success.main" : "text.disabled" }}>{item.icon}</Box>
-                            <Typography fontWeight={600}>{item.label}</Typography>
-                          </Stack>
-                          <Switch
-                            checked={isOn(item.value)}
-                            onChange={() => toggleSwitch(item.path, item.value)}
-                            color={isOn(item.value) ? "success" : "default"}
-                          />
-                        </Stack>
-                        <Typography variant="caption" sx={{ color: "text.secondary", mt: 1, display: "block" }}>
-                          Status: <strong>{matchValue(item.value)}</strong>
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-
-                <Box sx={{ mt: 3 }}>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                    Feeder and gate actions
+            <Grid size={{ xs: 12, lg: 5 }}>
+              <Card sx={{ borderRadius: 4, boxShadow: 3, height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                    Sensor overview
                   </Typography>
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap>
-                    <Button variant="contained" color="primary" onClick={() => updateControl("/controls/feeder_servo", "open")}>
-                      Open feeder servo
-                    </Button>
-                    <Button variant="outlined" onClick={() => updateControl("/controls/feeder_servo", "close")}>
-                      Close feeder servo
-                    </Button>
-                    <Button variant="contained" color="secondary" onClick={() => updateControl("/controls/feeder_motor", "on")}>
-                      Start feeder motor
-                    </Button>
-                    <Button variant="outlined" onClick={() => updateControl("/controls/feeder_motor", "off")}>
-                      Stop feeder motor
-                    </Button>
-                  </Stack>
+                  <Divider sx={{ mb: 2 }} />
 
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} useFlexGap sx={{ mt: 2 }}>
-                    <Button variant="contained" sx={{ bgcolor: "#2e7d32" }} onClick={() => updateControl("/controls/gate", "open")}>
-                      Open gate
-                    </Button>
-                    <Button variant="contained" sx={{ bgcolor: "#ef6c00" }} onClick={() => updateControl("/controls/gate", "close")}>
-                      Close gate
-                    </Button>
-                    <Button variant="outlined" onClick={() => updateControl("/controls/gate", "stop")}>
-                      Stop gate
-                    </Button>
-                  </Stack>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                  <Stack spacing={2}>
+                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography fontWeight={600}>Temperature</Typography>
+                        <Typography color="primary.main" fontWeight={700}>{Number.isFinite(temperature) ? `${temperature.toFixed(1)}°C` : "--"}</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={Math.min(100, Math.max(0, (temperature / 50) * 100))} sx={{ mt: 1.5, height: 8, borderRadius: 999 }} color="primary" />
+                    </Box>
 
-          <Grid size={{ xs: 12, lg: 5 }}>
-            <Card sx={{ borderRadius: 4, boxShadow: 3, height: "100%" }}>
-              <CardContent>
-                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                  Sensor overview
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography fontWeight={600}>Humidity</Typography>
+                        <Typography color="info.main" fontWeight={700}>{Number.isFinite(humidity) ? `${humidity.toFixed(0)}%` : "--"}</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={Math.min(100, humidity)} sx={{ mt: 1.5, height: 8, borderRadius: 999, bgcolor: "#d9f1ff" }} color="info" />
+                    </Box>
 
-                <Stack spacing={2}>
-                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight={600}>Temperature</Typography>
-                      <Typography color="primary.main" fontWeight={700}>{Number.isFinite(temperature) ? `${temperature.toFixed(1)}°C` : "--"}</Typography>
-                    </Stack>
-                    <LinearProgress variant="determinate" value={Math.min(100, Math.max(0, (temperature / 50) * 100))} sx={{ mt: 1.5, height: 8, borderRadius: 999 }} color="primary" />
-                  </Box>
-
-                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight={600}>Humidity</Typography>
-                      <Typography color="info.main" fontWeight={700}>{Number.isFinite(humidity) ? `${humidity.toFixed(0)}%` : "--"}</Typography>
-                    </Stack>
-                    <LinearProgress variant="determinate" value={Math.min(100, humidity)} sx={{ mt: 1.5, height: 8, borderRadius: 999, bgcolor: "#d9f1ff" }} color="info" />
-                  </Box>
-
-                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight={600}>Soil moisture</Typography>
-                      <Typography color={soilStatus === "dry" ? "warning.main" : "success.main"} fontWeight={700}>
-                        {soilStatus}
+                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography fontWeight={600}>Soil moisture</Typography>
+                        <Typography color={soilStatus === "dry" ? "warning.main" : "success.main"} fontWeight={700}>
+                          {soilStatus}
+                        </Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={soilLevel} sx={{ mt: 1.5, height: 8, borderRadius: 999 }} color={soilStatus === "dry" ? "warning" : "success"} />
+                      <Typography variant="caption" sx={{ display: "block", mt: 1, color: "text.secondary" }}>
+                        Raw ADC: {soilRaw || 0}
                       </Typography>
-                    </Stack>
-                    <LinearProgress variant="determinate" value={soilLevel} sx={{ mt: 1.5, height: 8, borderRadius: 999 }} color={soilStatus === "dry" ? "warning" : "success"} />
-                    <Typography variant="caption" sx={{ display: "block", mt: 1, color: "text.secondary" }}>
-                      Raw ADC: {soilRaw || 0}
-                    </Typography>
-                  </Box>
+                    </Box>
 
-                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                      Device status
-                    </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                      {Object.entries({
-                        Gate: controls.gate,
-                        "Servo state": controls.feeder_servo,
-                        "Motor state": controls.feeder_motor,
-                        "Last update": lastUpdated,
-                      }).map(([label, value]) => (
-                        <Chip key={label} label={`${label}: ${value}`} variant="outlined" color={value === "on" || value === "open" ? "success" : "default"} />
-                      ))}
-                    </Stack>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        <Card sx={{ mt: 3, borderRadius: 4, boxShadow: 3 }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-              Automated farm status
-            </Typography>
-            <Grid container spacing={2}>
-              {autoStatusItems.map(([label, value]) => (
-                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={label}>
-                  <Box sx={{ p: 2, borderRadius: 3, bgcolor: value === "on" || value === "open" ? "rgba(20, 165, 73, 0.08)" : "#f7faf7" }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-                      {label}
-                    </Typography>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="h6" fontWeight={700}>{String(value)}</Typography>
-                      <AutoAwesomeIcon color={value === "on" || value === "open" ? "success" : "disabled"} />
-                    </Stack>
-                  </Box>
-                </Grid>
-              ))}
+                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#f7faf7" }}>
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        Device status
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {Object.entries({
+                          Gate: controls.gate,
+                          "Servo state": controls.feeder_servo,
+                          "Motor state": controls.feeder_motor,
+                          "Last update": lastUpdated,
+                        }).map(([label, value]) => (
+                          <Chip key={label} label={`${label}: ${value}`} variant="outlined" color={value === "on" || value === "open" ? "success" : "default"} />
+                        ))}
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
-          </CardContent>
-        </Card>
+          </Grid>
+
+          <Card sx={{ mt: 3, borderRadius: 4, boxShadow: 3 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                Automated farm status
+              </Typography>
+              <Grid container spacing={2}>
+                {autoStatusItems.map(([label, value]) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }} key={label}>
+                    <Box sx={{ p: 2, borderRadius: 3, bgcolor: value === "on" || value === "open" ? "rgba(20, 165, 73, 0.08)" : "#f7faf7" }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                        {label}
+                      </Typography>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6" fontWeight={700}>{String(value)}</Typography>
+                        <AutoAwesomeIcon color={value === "on" || value === "open" ? "success" : "disabled"} />
+                      </Stack>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Box>
       </Box>
-    </Box>
+
+      <Dialog open={Boolean(confirmDialog)} onClose={() => setConfirmDialog(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{confirmDialog?.title}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{confirmDialog?.message}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialog(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              confirmDialog?.onConfirm();
+              setConfirmDialog(null);
+            }}
+          >
+            {confirmDialog?.confirmLabel ?? "Confirm"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
