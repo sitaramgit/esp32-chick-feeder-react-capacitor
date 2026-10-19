@@ -136,14 +136,14 @@ useEffect(() => {
         try {
             // ✅ MUST be inside user action (Android rule)
             const stream = await navigator.mediaDevices.getUserMedia({
-                  video: {
-                    facingMode: { exact: "environment" }   // ← This forces back camera
-                    // Optional: Add resolution/quality constraints if needed
-                    // width: { ideal: 1280 },
-                    // height: { ideal: 720 },
-                    // frameRate: { ideal: 30 }
-                  },
-                // video: true,
+                  // video: {
+                  //   facingMode: { exact: "environment" }   // ← This forces back camera
+                  //   // Optional: Add resolution/quality constraints if needed
+                  //   // width: { ideal: 1280 },
+                  //   // height: { ideal: 720 },
+                  //   // frameRate: { ideal: 30 }
+                  // },
+                video: true,
                 audio: true
             });
 
