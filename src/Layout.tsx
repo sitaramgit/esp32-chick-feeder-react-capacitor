@@ -13,30 +13,39 @@ import {
   ListItemText,
   useMediaQuery,
   useTheme,
+  Divider,
 } from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
-import CallIcon from '@mui/icons-material/Call';
-import SettingsIcon from '@mui/icons-material/Settings';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import AddchartIcon from '@mui/icons-material/Addchart';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import { Capacitor } from '@capacitor/core';
- import InsightsIcon from '@mui/icons-material/Insights';
- import CameraIndoorIcon from '@mui/icons-material/CameraIndoor';
-  import EngineeringIcon from '@mui/icons-material/Engineering';
+import SettingsIcon from '@mui/icons-material/Settings';
 import HomeIcon from '@mui/icons-material/Home';
-const drawerWidth = 240;
+import InsightsIcon from '@mui/icons-material/Insights';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import { Capacitor } from '@capacitor/core';
+
+const drawerWidth = 260;
 
 const Layout = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [bottomNav, setBottomNav] = useState<number>(0);
-
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md')); // md = 960px+
-const isAndroid = Capacitor.getPlatform() === 'android';
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isAndroid = Capacitor.getPlatform() === 'android';
+
+  const navigateToPage = (path: string) => {
+    navigate(path);
+  };
+
+  const menuItems = [
+    { label: 'Dashboard', path: '/', icon: <HomeIcon /> },
+    { label: 'Climate Chart', path: '/climate-chart', icon: <InsightsIcon /> },
+    { label: 'Farm Controls', path: '/operate-dispense', icon: <EngineeringIcon /> },
+    { label: 'Settings', path: '/', icon: <SettingsIcon /> },
+  ];
+
   const Sidebar = (
     <Drawer
       variant="permanent"
@@ -46,109 +55,135 @@ const isAndroid = Capacitor.getPlatform() === 'android';
         [`& .MuiDrawer-paper`]: {
           width: drawerWidth,
           boxSizing: 'border-box',
+          background: 'linear-gradient(180deg, #183b2a 0%, #1f4b39 100%)',
+          color: '#eaf7ef',
+          border: 'none',
         },
       }}
     >
       <Toolbar />
-      <List>
-        <ListItem sx={{cursor: 'pointer'}} onClick={() => navigateToPage('/climate-chart')} >
-          <ListItemIcon>
-            <InsightsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Climate Chart"  />
-        </ListItem>
-        <ListItem  sx={{cursor: 'pointer'}} onClick={() => navigateToPage('/operate-dispense')} >
-          <ListItemIcon>
-            <EngineeringIcon />
-          </ListItemIcon>
-          <ListItemText primary="Operate Dispenser" />
-        </ListItem>
-        <ListItem >
-          <ListItemIcon>
-            <SettingsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Settings" />
-        </ListItem>
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1.6, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+        <Box sx={{ p: 1.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.12)' }}>
+          <ReceiptIcon sx={{ color: '#d4f7dc' }} />
+        </Box>
+        <Box>
+          <Typography variant="subtitle2" sx={{ color: '#b8e7c4', letterSpacing: 1.4, textTransform: 'uppercase' }}>
+            Smart farm
+          </Typography>
+          <Typography variant="h6" fontWeight={700}>
+            Chick Farm Automation
+          </Typography>
+        </Box>
+      </Box>
+
+      <List sx={{ px: 1.5, py: 2 }}>
+        {menuItems.map((item) => (
+          <ListItem
+            key={item.label}
+            onClick={() => navigateToPage(item.path)}
+            sx={{
+              cursor: 'pointer',
+              borderRadius: 2,
+              mb: 1,
+              color: '#edf9f0',
+              background: location.pathname === item.path ? 'rgba(255,255,255,0.14)' : 'transparent',
+              '&:hover': { background: 'rgba(255,255,255,0.08)' },
+            }}
+          >
+            <ListItemIcon sx={{ color: '#d9fbe5', minWidth: 36 }}>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </ListItem>
+        ))}
       </List>
+
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', my: 1 }} />
+
+      <Box sx={{ px: 2, py: 2 }}>
+        <Typography variant="caption" sx={{ color: '#b8e7c4' }}>
+          Live monitoring
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, color: '#edf9f0' }}>
+          Pump, bulb, servo, soil and climate sensors
+        </Typography>
+      </Box>
     </Drawer>
   );
 
-  const navigateToPage = (path: string) => {
-    navigate(path);
-  }
   return (
     <Box display="flex" height="100vh" overflow="hidden">
-      {/* Side nav for desktop */}
       {isDesktop && Sidebar}
 
-      {/* Main content */}
       <Box
         flexGrow={1}
         display="flex"
         flexDirection="column"
         sx={{
-            mt: 1,
+          mt: 1,
           paddingTop: 'env(safe-area-inset-top)',
           paddingBottom: isDesktop ? 0 : 'env(safe-area-inset-bottom)',
         }}
       >
-        {/* Top App Bar */}
         <AppBar
           position="fixed"
           color="default"
           sx={{
             ...(isAndroid && { paddingTop: '25px' }),
             zIndex: theme.zIndex.drawer + 1,
+            background: 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(0,0,0,0.06)',
           }}
         >
-        <Toolbar>
+          <Toolbar>
             <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-              <Box onClick={() => navigateToPage('/')} display="flex" color={'rgb(58 168 142)'} alignItems="center" gap={1}>
+              <Box onClick={() => navigateToPage('/')} display="flex" color={'#1f9d5a'} alignItems="center" gap={1.2} sx={{ cursor: 'pointer' }}>
                 <ReceiptIcon />
                 <Typography variant="h6" fontWeight="bold">
-                  Chick Feeder
+                  Chick Farm Automation
                 </Typography>
               </Box>
-              <NotificationsIcon sx={{color: 'rgb(58 168 142)'}} />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <NotificationsIcon sx={{ color: '#1f9d5a' }} />
+                <Typography variant="body2" sx={{ color: '#2e3a2d', fontWeight: 600 }}>
+                  Farm online
+                </Typography>
+              </Box>
             </Box>
           </Toolbar>
         </AppBar>
 
-        {/* Spacer */}
         <Toolbar />
 
-        {/* Scrollable Middle Content */}
         <Box
-           flexGrow={1}
-           overflow="auto"
-           sx={{
-             paddingBottom: isDesktop ? 0 : 'calc(56px + env(safe-area-inset-bottom))', // 56px is default BottomNavigation height
-           }}
+          flexGrow={1}
+          overflow="auto"
+          sx={{
+            paddingBottom: isDesktop ? 0 : 'calc(56px + env(safe-area-inset-bottom))',
+          }}
         >
-          <Outlet></Outlet>
+          <Outlet />
         </Box>
 
-        {/* Bottom Navigation only for mobile/tablet */}
         {!isDesktop && (
-         <BottomNavigation
-         value={bottomNav}
-         onChange={(_e, newValue: number) => setBottomNav(newValue)}
-         sx={{
-           position: 'fixed',
-           bottom: 0,
-           width: '100%',
-           height: 56,
-           borderTop: '1px solid #ccc',
-           zIndex: 1100,
-           backgroundColor: '#fff',
-           ...(isAndroid && { paddingBottom: '25px' }),
-         }}
-       >
-      <BottomNavigationAction onClick={() => {navigateToPage('/')}}  label="Home" icon={<HomeIcon />} />
-         <BottomNavigationAction onClick={() => navigateToPage('/climate-chart')} label="Climate Chart" icon={<InsightsIcon />} />
-         <BottomNavigationAction onClick={() => navigateToPage('/operate-dispense')} label="Operate Dispense" icon={<EngineeringIcon />} />
-         
-       </BottomNavigation>
+          <BottomNavigation
+            value={bottomNav}
+            onChange={(_e, newValue: number) => setBottomNav(newValue)}
+            sx={{
+              position: 'fixed',
+              bottom: 0,
+              width: '100%',
+              height: 56,
+              borderTop: '1px solid #ccc',
+              zIndex: 1100,
+              backgroundColor: '#fff',
+              ...(isAndroid && { paddingBottom: '25px' }),
+            }}
+          >
+            <BottomNavigationAction onClick={() => navigateToPage('/')} label="Home" icon={<HomeIcon />} />
+            <BottomNavigationAction onClick={() => navigateToPage('/climate-chart')} label="Chart" icon={<InsightsIcon />} />
+            <BottomNavigationAction onClick={() => navigateToPage('/operate-dispense')} label="Controls" icon={<EngineeringIcon />} />
+          </BottomNavigation>
         )}
       </Box>
     </Box>
