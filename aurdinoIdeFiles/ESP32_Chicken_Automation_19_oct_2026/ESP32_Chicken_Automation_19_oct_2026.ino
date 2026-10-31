@@ -46,8 +46,8 @@
 #define LIMIT_OPEN          33
 
 // ---------------- USER SETTINGS ----------------
-const char* WIFI_SSID = "chicken";
-const char* WIFI_PASSWORD = "12345678";
+const char* WIFI_SSID = "JioFi_2DE73C2";
+const char* WIFI_PASSWORD = "cy2psh4ge7";
 const char* FIREBASE_API_KEY = "AIzaSyDe8Jbt1lxmVLPHr65ZucM--qIFE4D_v_s";
 const char* FIREBASE_USER_EMAIL = "sitaramkdks@gmail.com";
 const char* FIREBASE_USER_PASSWORD = "Sitaram$0279";
